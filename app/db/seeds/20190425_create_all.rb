@@ -1,0 +1,59 @@
+# frozen_string_literal: true
+
+Sequel.seed(:development) do
+  def run
+    puts 'Seeding accounts, projects, documents'
+    create_accounts
+    create_owned_projects
+    create_documents
+    add_collaborators
+  end
+end
+
+require 'yaml'
+DIR = File.dirname(__FILE__)
+ACCOUNTS_INFO = YAML.load_file("#{DIR}/accounts_seed.yml")
+OWNER_INFO = YAML.load_file("#{DIR}/owners_projects.yml")
+PROJ_INFO = YAML.load_file("#{DIR}/projects_seed.yml")
+DOCUMENT_INFO = YAML.load_file("#{DIR}/documents_seed.yml")
+CONTRIB_INFO = YAML.load_file("#{DIR}/projects_collaborators.yml")
+
+def create_accounts
+  ACCOUNTS_INFO.each do |account_info|
+    Portfolio::Account.create(account_info)
+  end
+end
+
+def create_owned_projects
+  OWNER_INFO.each do |owner|
+    account = Portfolio::Account.first(username: owner['username'])
+    owner['proj_name'].each do |proj_name|
+      proj_data = PROJ_INFO.find { |proj| proj['name'] == proj_name }
+      account.add_owned_project(proj_data)
+    end
+  end
+end
+
+def create_documents
+  doc_info_each = DOCUMENT_INFO.each
+  projects_cycle = Portfolio::Project.all.cycle
+  loop do
+    doc_info = doc_info_each.next
+    project = projects_cycle.next
+    Portfolio::CreateDocumentForProject.call(
+      project_id: project.id, document_data: doc_info
+    )
+  end
+end
+
+def add_collaborators
+  contrib_info = CONTRIB_INFO
+  contrib_info.each do |contrib|
+    proj = Portfolio::Project.first(name: contrib['proj_name'])
+    contrib['collaborator_email'].each do |email|
+      Portfolio::AddCollaboratorToProject.call(
+        email: email, project_id: proj.id
+      )
+    end
+  end
+end

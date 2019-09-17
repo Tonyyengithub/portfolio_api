@@ -1,0 +1,38 @@
+---
+require:
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 2.6
+  Exclude:
+    - _snippets/*
+
+Layout/AlignHash:
+  Enabled: true
+  EnforcedColonStyle: table
+
+Layout/MultilineMethodCallIndentation:
+  Enabled: true
+  EnforcedStyle: indented
+
+Metrics/BlockLength:
+  Enabled: true
+  Exclude:
+    - specs/**/*
+    - Rakefile
+
+Security/YAMLLoad:
+  Enabled: true
+  Exclude:
+    - specs/**/*
+
+Style/HashSyntax:
+  Enabled: true
+  Exclude:
+    - Rakefile
+
+Style/SymbolArray:
+  Enabled: true
+  Exclude:
+    - app/db/migrations/**/*
+    - Rakefile
